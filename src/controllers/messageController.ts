@@ -1,4 +1,4 @@
-import TelegramBot from 'node-telegram-bot-api';
+import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { financialService } from '../services/financialService';
 import { sheetsService } from '../google/sheetsService';
 import { ParsedMessage, PendingSession, Category, PaymentMethod } from '../types';
@@ -34,7 +34,6 @@ const COMMANDS: Record<string, (chatId: number, bot: TelegramBot, username: stri
   'relatorio mes': handleMonthReport,
   'auditoria': handleAudit,
   'auditoria caixa': handleAudit,
-  'categorias': handleCategories,
   'analise categorias': handleCategories,
   'ajuda': handleHelp,
   'help': handleHelp,
@@ -43,7 +42,7 @@ const COMMANDS: Record<string, (chatId: number, bot: TelegramBot, username: stri
 // ─── Handler principal ────────────────────────────────────────────────────────
 
 export async function handleMessage(
-  msg: TelegramBot.Message,
+  msg: Message,
   bot: TelegramBot
 ): Promise<void> {
   const chatId = msg.chat.id;
@@ -182,9 +181,10 @@ async function handlePendingSession(
     case 'awaiting_category': {
       // Aceitar número (índice) ou texto
       const categories: Category[] = [
-        'Frete', 'Combustível', 'Pedágio', 'Alimentação', 'Manutenção',
-        'Transferência', 'PIX', 'Depósito', 'Saque', 'Recebimento Cliente',
-        'Fornecedor', 'Lavagem', 'Seguro', 'Salário', 'Outros',
+        'Frete', 'Troco', 'Venda de avaria', 'Reembolso de descarga', 'Recebimento',
+        'Combustível', 'Descarga', 'Pernoite', 'Manutenção', 'Peças', 'Ferramentas',
+        'Lubrificantes', 'Predial', 'Material de construção', 'Material de escritorio',
+        'Marketing', 'Gratificação', 'Vale transporte', 'Vale alimentação', 'Salario', 'Outros',
       ];
       const index = parseInt(text, 10) - 1;
       let category: Category | undefined;
@@ -293,17 +293,6 @@ async function handleCancelLast(chatId: number, bot: TelegramBot): Promise<void>
     `✅ Lançamento cancelado:\n\`${deleted.id}\` — ${deleted.type} — ${formatCurrency(deleted.value)}`,
     { parse_mode: 'Markdown' }
   );
-}
-
-async function handleCategories(chatId: number, bot: TelegramBot): Promise<void> {
-  const cats = [
-    'Frete', 'Combustível', 'Pedágio', 'Alimentação', 'Manutenção',
-    'Transferência', 'PIX', 'Depósito', 'Saque', 'Recebimento Cliente',
-    'Fornecedor', 'Lavagem', 'Seguro', 'IPVA/Licenciamento', 'Salário', 'Comissão', 'Outros',
-  ];
-  await bot.sendMessage(chatId, `📂 *Categorias disponíveis:*\n\n${cats.map((c) => `• ${c}`).join('\n')}`, {
-    parse_mode: 'Markdown',
-  });
 }
 
 async function handleDashboard(chatId: number, bot: TelegramBot): Promise<void> {
