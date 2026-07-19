@@ -51,6 +51,7 @@ async function main(): Promise<void> {
 }
 
 main().catch((err) => {
-  logger.error('Erro fatal na inicialização', err);
-  process.exit(1);
+  logger.error('Erro fatal na inicialização:', err);
+  console.error('Stack trace:', err instanceof Error ? err.stack : err);
+  setTimeout(() => process.exit(1), 1000);
 });
