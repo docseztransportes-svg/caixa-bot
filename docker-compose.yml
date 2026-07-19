@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  caixa-bot:
+    build: .
+    container_name: caixa-bot
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+    env_file:
+      - .env
+    volumes:
+      - ./logs:/app/logs
+      - ./credentials:/app/credentials:ro
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
