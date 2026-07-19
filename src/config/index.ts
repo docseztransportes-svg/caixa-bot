@@ -24,17 +24,27 @@ export const config = {
         const filePath = path.join('/tmp', 'service-account-key.json');
 
         try {
-          // Tentar parsear e reescrever (remove caracteres extras)
-          const cleaned = keyEnv.replace(/[\r\n\t]/g, '').trim();
+          // Remover caracteres de controle e quotas escapadas agressivamente
+          let cleaned = keyEnv
+            .replace(/[\x00-\x1f\x7f]/g, '') // Remove controle chars
+            .replace(/\\"/g, '"')              // Unescape quotes
+            .replace(/\\\\/g, '\\')            // Unescape backslashes
+            .trim();
+
+          // Encontrar primeiro { e último }
+          const start = cleaned.indexOf('{');
+          const end = cleaned.lastIndexOf('}');
+          if (start !== -1 && end > start) {
+            cleaned = cleaned.substring(start, end + 1);
+          }
+
           const parsed = JSON.parse(cleaned);
           const jsonString = JSON.stringify(parsed);
           fs.writeFileSync(filePath, jsonString);
-          console.log(`✅ JSON parseado e limpo: project_id=${parsed.project_id}, client_email=${parsed.client_email}`);
+          console.log(`✅ JSON parseado: project_id=${parsed.project_id}, client_email=${parsed.client_email}`);
         } catch (e) {
           console.error('❌ ERRO ao parsear JSON:', e instanceof Error ? e.message : e);
-          // Salvar JSON como-está mesmo com erro (pode funcionar)
-          fs.writeFileSync(filePath, keyEnv);
-          console.warn('⚠️  JSON salvo como-está (pode ter erros)');
+          throw new Error('GOOGLE_SERVICE_ACCOUNT_KEY inválido - não pôde ser parseado como JSON');
         }
 
         return filePath;
