@@ -8,7 +8,7 @@ async function main(): Promise<void> {
   logger.info('=== CaixaBot - Sistema Financeiro de Transportadora ===');
   logger.info(`Ambiente: ${config.app.env}`);
 
-  // Health check server para Render
+  // Health check server para Render (PRIMEIRO, para abrir porta)
   const port = process.env.PORT || 3000;
   const server = http.createServer((req, res) => {
     if (req.url === '/health') {
@@ -19,18 +19,35 @@ async function main(): Promise<void> {
       res.end();
     }
   });
-  server.listen(port, () => {
-    logger.info(`Health check server listening on port ${port}`);
+
+  await new Promise<void>((resolve) => {
+    server.listen(port, () => {
+      logger.info(`✅ Health check server listening on port ${port}`);
+      resolve();
+    });
   });
 
   // Inicializar Google Sheets
   logger.info('Conectando ao Google Sheets...');
-  await sheetsService.init();
-  await sheetsService.ensureSheetStructure();
+  try {
+    await sheetsService.init();
+    await sheetsService.ensureSheetStructure();
+    logger.info('✅ Google Sheets conectado');
+  } catch (err) {
+    logger.error('❌ Erro ao conectar Google Sheets:', err);
+    throw err;
+  }
 
   // Iniciar bot
-  const bot = new CaixaBot();
-  bot.start();
+  try {
+    logger.info('Iniciando bot Telegram...');
+    const bot = new CaixaBot();
+    bot.start();
+    logger.info('✅ Bot Telegram iniciado');
+  } catch (err) {
+    logger.error('❌ Erro ao iniciar bot Telegram:', err);
+    throw err;
+  }
 
   // Graceful shutdown
   process.on('SIGINT', async () => {
