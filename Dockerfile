@@ -2,14 +2,17 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Dependências de produção primeiro (cache de layers)
+# Instalar todas as dependências
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm ci
 
 # Build TypeScript
 COPY tsconfig.json ./
 COPY src ./src
-RUN npm install --include=dev && npm run build && npm prune --production
+RUN npm run build
+
+# Remover devDependencies para produção
+RUN npm prune --production
 
 # Diretórios necessários em runtime
 RUN mkdir -p logs credentials
