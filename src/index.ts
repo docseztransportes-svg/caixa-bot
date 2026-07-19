@@ -4,6 +4,8 @@ import { CaixaBot } from './bot/telegramBot';
 import { logger } from './utils/logger';
 import * as http from 'http';
 
+let botInstance: CaixaBot | null = null;
+
 async function main(): Promise<void> {
   logger.info('=== CaixaBot - Sistema Financeiro de Transportadora ===');
   logger.info(`Ambiente: ${config.app.env}`);
@@ -41,8 +43,8 @@ async function main(): Promise<void> {
   // Iniciar bot
   try {
     logger.info('Iniciando bot Telegram...');
-    const bot = new CaixaBot();
-    bot.start();
+    botInstance = new CaixaBot();
+    botInstance.start();
     logger.info('✅ Bot Telegram iniciado');
   } catch (err) {
     logger.error('❌ Erro ao iniciar bot Telegram:', err);
@@ -52,13 +54,13 @@ async function main(): Promise<void> {
   // Graceful shutdown
   process.on('SIGINT', async () => {
     logger.info('Encerrando...');
-    await bot.stop();
+    if (botInstance) await botInstance.stop();
     process.exit(0);
   });
 
   process.on('SIGTERM', async () => {
     logger.info('Encerrando (SIGTERM)...');
-    await bot.stop();
+    if (botInstance) await botInstance.stop();
     process.exit(0);
   });
 
