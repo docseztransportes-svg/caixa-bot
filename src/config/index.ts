@@ -16,9 +16,18 @@ export const config = {
   },
   google: {
     spreadsheetId: required('SPREADSHEET_ID'),
-    serviceAccountKeyPath: path.resolve(
-      process.env.GOOGLE_SERVICE_ACCOUNT_KEY ?? './credentials/google-service-account.json'
-    ),
+    serviceAccountKeyPath: (() => {
+      const keyEnv = process.env.GOOGLE_SERVICE_ACCOUNT_KEY ?? './credentials/google-service-account.json';
+      // Se começar com { é um JSON, senão é um caminho
+      if (keyEnv.trim().startsWith('{')) {
+        // Salvar JSON em arquivo temporário
+        const fs = require('fs');
+        const filePath = path.join('/tmp', 'service-account-key.json');
+        fs.writeFileSync(filePath, keyEnv);
+        return filePath;
+      }
+      return path.resolve(keyEnv);
+    })(),
   },
   app: {
     timezone: process.env.TIMEZONE ?? 'America/Sao_Paulo',
