@@ -24,6 +24,15 @@ export const config = {
         const fs = require('fs');
         const filePath = path.join('/tmp', 'service-account-key.json');
         fs.writeFileSync(filePath, keyEnv);
+
+        // Log de debug (remover depois)
+        try {
+          const parsed = JSON.parse(keyEnv);
+          console.log(`✅ JSON parseado: project_id=${parsed.project_id}, client_email=${parsed.client_email}`);
+        } catch (e) {
+          console.error('❌ ERRO ao parsear JSON:', e instanceof Error ? e.message : e);
+        }
+
         return filePath;
       }
       return path.resolve(keyEnv);
